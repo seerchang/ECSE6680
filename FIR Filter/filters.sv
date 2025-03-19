@@ -229,13 +229,6 @@ module fir_parallel_L3_pipeline #(
     logic signed [63:0] sum_pipeline_3 [N-1:0];
     logic signed [63:0] sum_pipeline_3_d [N-1:0];
 
-    logic signed [63:0] p1 [N-1:0];
-    logic signed [63:0] p2 [N-1:0];
-    logic signed [63:0] p3 [N-1:0];
-    logic signed [63:0] p1_d [N-1:0];
-    logic signed [63:0] p2_d [N-1:0];
-    logic signed [63:0] p3_d [N-1:0];
-
     always_comb begin
         if (valid) begin
             x1_in = x1;
@@ -256,49 +249,24 @@ module fir_parallel_L3_pipeline #(
                 sum_pipeline_2[i] <= '0;
                 sum_pipeline_3[i] <= '0;
                 sum_pipeline_3_d[i] <= '0;
-                p1_d[i] <= 0;
-                p2_d[i] <= 0;
-                p3_d[i] <= 0;
-                p1[i] <= 0;
-                p2[i] <= 0;
-                p3[i] <= 0;
             end
         end
         else begin
-            // 
             sum_pipeline_1[0] <= (x1_in * coeffs[N-1]) >>> 31;
             sum_pipeline_2[0] <= (x2_in * coeffs[N-1]) >>> 31;
             sum_pipeline_3[0] <= (x3_in * coeffs[N-1]) >>> 31;
             
             for (i = 1; i < N; i++) begin
-                p1[i] = (x1_in * coeffs[N-1-i]) >>> 31;
-                p2[i] = (x2_in * coeffs[N-1-i]) >>> 31;
-                p3[i] = (x3_in * coeffs[N-1-i]) >>> 31;
 
-                //sum_pipeline_1[i] = sum_pipeline_3_d[i-1] + p1[i];
-                //sum_pipeline_2[i] = sum_pipeline_1[i-1] + p2[i];
-                //sum_pipeline_3[i] = sum_pipeline_2[i-1] + p3[i];
                 sum_pipeline_1[i] <= sum_pipeline_3_d[i-1] + (x1_in * coeffs[N-1-i]) >>> 31;
                 sum_pipeline_2[i] <= sum_pipeline_1[i-1] + (x2_in * coeffs[N-1-i]) >>> 31;
                 sum_pipeline_3[i] <= sum_pipeline_2[i-1] + (x3_in * coeffs[N-1-i]) >>> 31;
-
-
-                p1_d[i] = p1[i];
-                p2_d[i] = p2[i];
-                p3_d[i] = p3[i];
                 sum_pipeline_3_d[i] = sum_pipeline_3[i];
             end
 
         end
 
     end
-
-    logic signed [63:0] t1, t2, t3;
-    assign t1 = sum_pipeline_2[N-2];
-    assign t2 = p3[N-1];
-    assign t3 = sum_pipeline_3[N-1];
-
-
     assign y1 = sum_pipeline_1[N-1][31:0];
     assign y2 = sum_pipeline_2[N-1][31:0];
     assign y3 = sum_pipeline_3[N-1][31:0];
